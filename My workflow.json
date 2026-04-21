@@ -1,0 +1,206 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b52aa890-81d5-4cab-b396-bb1244f97cb6",
+      "name": "Telegram Trigger",
+      "webhookId": "f1e6d1ed-a1a4-45c4-8983-e95141cdf484",
+      "credentials": {
+        "telegramApi": {
+          "id": "ssPCVmaoMJvcfal0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo.slice(-1)[0].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "76d09668-de99-46fa-83d9-08f02156127f",
+      "name": "Get a file",
+      "webhookId": "178c2a59-dee9-4044-868a-1d3f30347975",
+      "credentials": {
+        "telegramApi": {
+          "id": "ssPCVmaoMJvcfal0",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        752,
+        128
+      ],
+      "id": "2882f2b6-6bf5-4566-ae8f-4d5d4a84aa6d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.stability.ai/v2beta/stable-image/generate/sd3",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "image/*"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "mode",
+              "value": "image-to-image"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $('Telegram Trigger').item.json.message.caption }}"
+            },
+            {
+              "name": "strength",
+              "value": "0.7"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "6ced9785-7dc6-4a22-91fd-093e98d238a4",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "L0vOTKwVj0EcaeI6",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $now.toFormat('yyyyMMdd_HHmm') }}_{{ $json.message.from.first_name }}_{{ $json.message.caption ? $json.message.caption.substring(0,15).replace(/[^a-zA-Z0-9]/g, '') : 'image' }}.png",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1QvNRMkXptUF5xiDNgqzn6I_Ju27_cFjo",
+          "mode": "list",
+          "cachedResultName": "thigiuaki",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1QvNRMkXptUF5xiDNgqzn6I_Ju27_cFjo"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "c2a57939-8181-40a1-aa4a-6cde7384ce2f",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "nmeKFv9MWqVzJqWC",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "03998ce0-c9b0-4195-846c-02c7432b09f1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3cff9165740691704d72d1171468050494ac0387a1825f65fe907074aa629b75"
+  },
+  "id": "03e5GH3dUx0nc5FV",
+  "tags": []
+}
